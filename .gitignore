@@ -20,7 +20,8 @@
 doc/
 posted/
 work/
+output/
 .Rproj.user/
 
-# Except template files
+# Except template files, DOES NOT WORK
 !doc/template.docx
