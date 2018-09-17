@@ -22,5 +22,8 @@ posted/*
 work/*
 output/*
 
-# Except template file
+# Except template file and gitignores
 !doc/template.docx
+!posted/.gitignore
+!work/.gitignore
+!output/.gitignore

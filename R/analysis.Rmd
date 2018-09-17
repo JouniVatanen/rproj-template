@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Rproj template"
 author: "Jouni Vatanen"
 date: "16.9.2018"
@@ -18,28 +18,129 @@ editor_options:
 ---
 
 ```{r setup, echo = FALSE, results = "hide", warning = FALSE, error = FALSE, message = FALSE}
-# Define required variables and paths if necessary
-csv.data <- "data/.csv"
+# Define names, variables and paths if necessary
+csv.data.2018 <- "data/data-2018.csv"
+xls.data.2018 <- "data/data-2018.xlsx"
 #my.year <- c("2018")
 
-# Define columns from the data
-col.select.2017 <- c(seq(1,30,3), seq(47,76,3), seq(93,122,3), seq(139,168,3), seq(185,214,3), 232,233,236,237,240,241,244,247,251:262)
-col.select.henkilo.2018 <- c(1, seq(2,31,3), seq(48,77,3), seq(94,123,3), seq(140,169,3), seq(186,215,3), 233,234,237,238,241,242,245,248,263:273)
-col.select.yritys.2018 <- c(1:3, seq(4,33,3), seq(50,79,3), seq(96,125,3), seq(142,171,3), seq(188,217,3), 235,236,239,240,243,244,247,250,265:275)
+# Select columns to load
+col.select <- c(1:10, 13)
 
-# Define required packages and functions
+# Load (and install) packages and functions
 source("R/functions.R")
-if (!require("pacman")) install.packages("pacman")
-pacman::p_load_gh("JouniVatanen/Jmisc")
-pacman::p_load()
+if (!require("pacman")) install.packages("pacman") #pacman loads and installs packages
+packman::p_load("checkpoint") # checkpoint installs packages from a given date for reproduction
+checkpoint::checkpoint("2018-08-01") # use the same date when R-3.5.1. was released
+pacman::p_load_gh("JouniVatanen/Jmisc") # usermade general custom functions
 
-# Load other packages, if necessary
-#Jmisc::load_pkg(c("",""))
-#my.packages <- c()
-#lapply(my.packages, function(x) library(x, character.only = T, warn.conflicts = F, quietly = T))
+# Load (and install) usual packages
+pacman::p_load("readxl", "tidyverse", "tidyr", "data.table", "magrittr", "lubridate", "knitr", "modelr", "broom", "caret")
+
+# Load (and install) other packages, if necessary
+#pacman::p_load("desctable", "Hmisc", "GGally", "kableExtra", "formattable", "gridExtra", "FactoMineR", "factoextra", "ClustOfVar", "psych", "ggrepel", "pROC", "DT", "webshot")
 
 # Define global options FALSE and knitr options
 knitr::opts_chunk$set(warning = FALSE, error = FALSE, message = FALSE, echo = FALSE)
 #webshot::install_phantomjs()
 options(knitr.kable.NA = "")
 ```
+
+# Johdanto
+
+Vastaa kysymyksiin, miksi tämä työ on tehty, mistä on kyse ja lyhyesti mitä on tehty. 
+
+```{r load-data, results = "hide"}
+# Load data csv/xlsx
+df.2018 <- fread(csv.data.2018, select=col.select, encoding="UTF-8", check.names = TRUE)
+df.2018 <- read_excel(xls.data.2018, sheet=1)
+```
+
+```{r mutate-data, results = "hide"}
+# Mutate and combine data
+# Recode and classify
+koulutus.class <- rlang::exprs(
+  "1 Ylempi korkeakoulu"                = "Yliopisto/korkeakoulu",
+  "2 AMK"                               = "Ammattikorkeakoulu",
+  "3 Ylioppilas"                        = "Ylioppilas/opisto",
+  "4 Perus-/ ammattikoulu"              = "Kansa-/perus-/keski-/ammattikoulu",
+  "5 EOS"                               = "Valitse")
+
+# If you want to combine many df, then rename, select and give a version name
+df.2018 %<>%
+  mutate(version = "v2018") %>%
+  rename() %>%
+  select()
+
+# Mutate the data using the same function
+df.2018 %<>% my_mutate()
+
+# Combine different data sources and mutate factors to the same levels
+# If you combine factor columns, then define those columns
+fct.col <- c() 
+
+df.example.all <- bind_rows(df.2018, df.2017) %>%
+  mutate_at(vars(one_of(fct.col)), funs(as.factor))
+```
+
+```{r data-to-txt, eval = FALSE, include = FALSE}
+# Export data to txt-file
+Jmisc::df_to_txt(df.example, "output/data_example.txt")
+```
+
+```{r data-to-desc, eval = FALSE, include = FALSE}
+# Create basic output to inspect the file
+Jmisc::inspect(df.example, "output/desc_example.txt")
+```
+
+# Tiivistelmä
+
+Yhteenveto ja johtopäätökset
+
+# Tulokset
+
+## Peruskuvat
+
+```{r fig-cor, fig.width = 10, fig.height = 10}
+# Correlation plot
+Jmisc::corr_plot(df.2018)
+```
+
+```{r pic-01, eval = FALSE, fig.height = 10, fig.width = 10, include = FALSE}
+# Basic plot
+#Note: Still needs some work to make better looking mosaic plots
+# Load packages
+require(GGally)
+
+# Plot matrix of all variables
+pl.df <- select(df.2018, c(1:50)) %>% mutate_at(1:50, as.factor)
+names(pl.df) <- str_replace_all(names(pl.df), "ö|ä", "")
+
+# Plot pairplot from all the active variables
+pl02 <- ggpairs(pl.df, upper = list(discrete = "blank"), lower = list(discrete = ggally_ratio), axisLabels = "none") +
+  theme_minimal()
+
+pl02
+
+```
+
+## Tulostaulukko
+
+```{r table-1, eval = knitr::is_html_output()}
+# Create table
+desc.2018 %>%
+  mutate_at(vars(-1), funs(round(., 1))) %>%
+  mutate_at(vars(-1), funs(ifelse(is.na(.), "", .))) %>%
+  formattable(list(area(2:nrow(.), 2:ncol(.)) ~ color_tile("white","orange"))) %>% 
+  as.datatable(rownames = FALSE, extensions = c("Buttons", "FixedColumns"), 
+    options = list(
+      pageLength = 5, scrollX = TRUE, dom = "Blrtip", buttons = list(
+        "copy", "print", list(
+          extend = "excel", filename = "Ilmarinen_futurescore"), 
+        list(
+          extend = "colvis", text = "Näytä/piilota sarakkeita", columns = ":gt(1)"), 
+        list(
+          extend = "colvisGroup", text = "Piilota kaikki", show = ":lt(2)", hide = ":gt(1)"))))
+```
+
+
+
