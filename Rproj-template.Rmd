@@ -64,16 +64,7 @@ rmarkdown::render("Rproj-template.Rmd",
 
 # Johdanto
 
-Tämä on mallipohja muille projekteille. Ajatuksena . 
-
-Ohje lyhyesti:
-
-1. Luo projekti
-2. Alusta git
-3. Lataa mallipohja githubista osoitteesta
-- [SSH-yhteys](https://help.github.com/articles/connecting-to-github-with-ssh/) git@github.com:JouniVatanen/rproj-template.git
-- [https-yhteys](https://help.github.com/articles/which-remote-url-should-i-use/#cloning-with-https-urls-recommended)https://github.com/JouniVatanen/rproj-template.git
-4. 
+Miksi tämä työ on tehty ja joitain tarvittavia linkkejä
 
 ```{r load-data, eval = FALSE}
 # Load data csv/xlsx
