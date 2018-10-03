@@ -15,7 +15,7 @@ output:
   word_document:
     reference_docx: "./doc/template.docx"
   powerpoint_presentation:
-    reference_doc: "./doc/template.pptx""
+    reference_doc: "./doc/template.pptx"
 editor_options: 
   chunk_output_type: console
 ---
