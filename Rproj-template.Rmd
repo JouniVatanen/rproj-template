@@ -1,61 +1,87 @@
 ---
 title: "Rproj template"
 author: "Jouni Vatanen"
-date: "16.9.2018"
+date: "`r format(Sys.time(), '%d.%m.%Y')`"
 output: 
   html_document: 
     toc: TRUE
-    toc_float: TRUE
+    toc_depth: 2
+    number_sections: FALSE
     df_print: paged
     code_folding: hide
-    number_sections: TRUE
+    css: "./doc/Ilmarinen.css"
   html_notebook: 
     code_folding: hide
   word_document:
-    reference_docx: "doc/template.docx"
+    reference_docx: "./doc/template.docx"
+  powerpoint_presentation:
+    reference_doc: "./doc/template.pptx""
 editor_options: 
   chunk_output_type: console
 ---
 
 ```{r setup, echo = FALSE, results = "hide", warning = FALSE, error = FALSE, message = FALSE}
 # Define names, variables and paths if necessary
-csv.data.2018 <- "data/data-2018.csv"
-xls.data.2018 <- "data/data-2018.xlsx"
+csv.data.2018 <- "./data/data-2018.csv"
+xls.data.2018 <- "/.data/data-2018.xlsx"
 #my.year <- c("2018")
 
 # Select columns to load
 col.select <- c(1:10, 13)
 
-# Load (and install) packages and functions
-source("R/functions.R")
+# Load (and install) packages
 if (!require("pacman")) install.packages("pacman") #pacman loads and installs packages
-packman::p_load("checkpoint") # checkpoint installs packages from a given date for reproduction
+pacman::p_load("checkpoint") # checkpoint installs packages from a given date for reproduction
 checkpoint::checkpoint("2018-08-01") # use the same date when R-3.5.1. was released
 pacman::p_load_gh("JouniVatanen/Jmisc") # usermade general custom functions
 
 # Load (and install) usual packages
-pacman::p_load("readxl", "tidyverse", "tidyr", "data.table", "magrittr", "lubridate", "knitr", "modelr", "broom", "caret")
+pacman::p_load("extrafont", "readxl", "tidyverse", "tidyr", "data.table", "magrittr", "lubridate", "knitr", "modelr", "broom", "caret")
 
 # Load (and install) other packages, if necessary
-#pacman::p_load("desctable", "Hmisc", "GGally", "kableExtra", "formattable", "gridExtra", "FactoMineR", "factoextra", "ClustOfVar", "psych", "ggrepel", "pROC", "DT", "webshot")
+#pacman::p_load("desctable", "Hmisc", "GGally", "kableExtra", "formattable", "gridExtra", "FactoMineR", "factoextra", "ClustOfVar", "psych", "ggrepel", "pROC", "DT", "webshot", "xts")
+
+# When installing extrafont for the first time, install also Arial fonts
+#extrafont::font_import(pattern = "Arial.*")
+
+# Load functions and api settings
+source("./R/functions.R")
 
 # Define global options FALSE and knitr options
 knitr::opts_chunk$set(warning = FALSE, error = FALSE, message = FALSE, echo = FALSE)
-#webshot::install_phantomjs()
+
+# Change knit table option NA to empty
 options(knitr.kable.NA = "")
+```
+
+```{r knit-document, eval = FALSE}
+# Activate to create a html file
+rmarkdown::render("Rproj-template.Rmd", 
+  output_format = "html_document", 
+  output_file = "./output/Rproj-template.html", 
+  encoding = "UTF-8")
 ```
 
 # Johdanto
 
-Vastaa kysymyksiin, miksi tämä työ on tehty, mistä on kyse ja lyhyesti mitä on tehty. 
+Tämä on mallipohja muille projekteille. Ajatuksena . 
 
-```{r load-data, results = "hide"}
+Ohje lyhyesti:
+
+1. Luo projekti
+2. Alusta git
+3. Lataa mallipohja githubista osoitteesta
+- [SSH-yhteys](https://help.github.com/articles/connecting-to-github-with-ssh/) git@github.com:JouniVatanen/rproj-template.git
+- [https-yhteys](https://help.github.com/articles/which-remote-url-should-i-use/#cloning-with-https-urls-recommended)https://github.com/JouniVatanen/rproj-template.git
+4. 
+
+```{r load-data, eval = FALSE}
 # Load data csv/xlsx
 df.2018 <- fread(csv.data.2018, select=col.select, encoding="UTF-8", check.names = TRUE)
 df.2018 <- read_excel(xls.data.2018, sheet=1)
 ```
 
-```{r mutate-data, results = "hide"}
+```{r mutate-data, eval = FALSE}
 # Mutate and combine data
 # Recode and classify
 koulutus.class <- rlang::exprs(
@@ -82,12 +108,12 @@ df.example.all <- bind_rows(df.2018, df.2017) %>%
   mutate_at(vars(one_of(fct.col)), funs(as.factor))
 ```
 
-```{r data-to-txt, eval = FALSE, include = FALSE}
+```{r data-to-txt, eval = FALSE}
 # Export data to txt-file
 Jmisc::df_to_txt(df.example, "output/data_example.txt")
 ```
 
-```{r data-to-desc, eval = FALSE, include = FALSE}
+```{r data-to-desc, eval = FALSE}
 # Create basic output to inspect the file
 Jmisc::inspect(df.example, "output/desc_example.txt")
 ```
@@ -100,12 +126,12 @@ Yhteenveto ja johtopäätökset
 
 ## Peruskuvat
 
-```{r fig-cor, fig.width = 10, fig.height = 10}
+```{r fig-cor-01, eval = FALSE}
 # Correlation plot
 Jmisc::corr_plot(df.2018)
 ```
 
-```{r pic-01, eval = FALSE, fig.height = 10, fig.width = 10, include = FALSE}
+```{r fig-basic-01, eval = FALSE}
 # Basic plot
 #Note: Still needs some work to make better looking mosaic plots
 # Load packages
@@ -125,7 +151,7 @@ pl02
 
 ## Tulostaulukko
 
-```{r table-1, eval = knitr::is_html_output()}
+```{r table-01, eval = FALSE}
 # Create table
 desc.2018 %>%
   mutate_at(vars(-1), funs(round(., 1))) %>%
@@ -141,6 +167,3 @@ desc.2018 %>%
         list(
           extend = "colvisGroup", text = "Piilota kaikki", show = ":lt(2)", hide = ":gt(1)"))))
 ```
-
-
-

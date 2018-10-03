@@ -1,0 +1,332 @@
+body {
+  background-color: transparent;
+  color:#00274b;
+  margin: 1em auto;
+  overflow: visible;
+  padding-left: 2em;
+  padding-right: 2em;
+  font-family: "HelveticaNeueW01-45Ligh",Arial,verdana; sans-serif;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+#header {
+  text-align: center;
+}
+
+#TOC {
+  clear: both;
+  margin: 0 0 10px 10px;
+  padding: 4px;
+  width: 400px;
+  border: 1px solid #CCCCCC;
+  border-radius: 5px;
+
+  background-color: #f6f6f6;
+  font-size: 13px;
+  line-height: 1.3;
+}
+  #TOC .toctitle {
+    font-weight: bold;
+    font-size: 15px;
+    margin-left: 5px;
+  }
+
+  #TOC ul {
+    padding-left: 40px;
+    margin-left: -1.5em;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  #TOC ul ul {
+    margin-left: -2em;
+  }
+  #TOC li {
+    line-height: 16px;
+  }
+
+table {
+  margin: 1em auto;
+  border-width: 1px;
+  border-color: #DDDDDD;
+  border-style: outset;
+  border-collapse: collapse;
+}
+table th {
+  border-width: 2px;
+  padding: 5px;
+  border-style: inset;
+}
+table td {
+  border-width: 1px;
+  border-style: inset;
+  line-height: 18px;
+  padding: 5px 5px;
+}
+table, table th, table td {
+  border-left-style: none;
+  border-right-style: none;
+}
+table thead, table tr.even {
+  background-color: #f7f7f7;
+}
+
+p {
+  margin: 0.5em 0;
+}
+
+blockquote {
+  background-color: #f6f6f6;
+  padding: 0.25em 0.75em;
+}
+
+hr {
+  border-style: solid;
+  border: none;
+  border-top: 1px solid #777;
+  margin: 28px 0;
+}
+
+dl {
+  margin-left: 0;
+}
+  dl dd {
+    margin-bottom: 13px;
+    margin-left: 13px;
+  }
+  dl dt {
+    font-weight: bold;
+  }
+
+ul {
+  margin-top: 0;
+}
+  ul li {
+    list-style: circle outside;
+  }
+  ul ul {
+    margin-bottom: 0;
+  }
+
+pre, code {
+  background-color: #f7f7f7;
+  border-radius: 3px;
+  color: #333;
+  white-space: pre-wrap;    /* Wrap long lines */
+}
+pre {
+  border-radius: 3px;
+  margin: 5px 0px 10px 0px;
+  padding: 10px;
+}
+pre:not([class]) {
+  background-color: #f7f7f7;
+}
+
+code {
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 85%;
+}
+p > code, li > code {
+  padding: 2px 0px;
+}
+
+div.figure {
+  text-align: center;
+}
+img {
+ max-width:100%;
+ width:auto\9;
+ height:auto;
+ vertical-align:middle;
+ border:0;
+ -ms-interpolation-mode:bicubic
+}
+
+h1, h2, h3, h4, h5, h6 {
+ margin:0;
+ font-family:'FranklinGothicDemiCondRegular','HelveticaNeueW01-75Bold',Arial;
+ font-weight:normal;
+ color:inherit;
+ text-rendering:optimizelegibility;
+ clear:both;
+ text-transform:uppercase
+}
+
+h1 p,h2 p,h3 p,h4 p,h5 p {
+ margin:0
+}
+
+h1 {
+ font-size:30px;
+ line-height:38px;
+ font-weight:700;
+ text-transform:uppercase;
+ color:#00274b;
+ margin:30px 0 20px
+}
+
+h2,span.h2,span.H2,.subpageContentArea h1,.searchResults h1,.service-header {
+  font-size:24px;
+  line-height:20px
+}
+
+h2,span.h2,span.H2,.subpageContentArea h1,.searchResults h1,.service-header {
+ font-size:24px;
+ line-height:20px;
+ font-weight:300;
+ margin:20px 0 15px 0
+}
+
+.subpageContentArea h1 {
+ margin-top:10px
+}
+
+h3,span.h3,span.H3,legend {
+ font-size:20px;
+ line-height:20px;
+ font-weight:500;
+ margin:20px 0 15px;
+ display:block
+}
+
+h4,span.h4,span.H4 {
+ font-size:20px;
+ line-height:20px;
+ font-weight:500;
+ margin:15px 0 10px;
+ color:#00274b
+}
+
+h4.lowercase,span.h4lowercase,span.H4lowercase {
+ text-transform:none
+}
+
+h5,span.h5,span.H5 {
+ font-size:20px;
+ line-height:20px;
+ font-weight:500;
+ margin:5px 0 5px;
+ color:#00274b
+}
+
+a {
+  color:#3a8da9;
+  text-decoration: none;
+}
+a:link,a:visited {
+  color:#3a8da9;
+  text-decoration:none
+}
+a:hover {
+  color:#3a8da9;
+  text-decoration:underline
+}
+a:active {
+  background-color:transparent
+}
+a[href^="http:"] {
+  text-decoration: underline; }
+a[href^="https:"] {
+  text-decoration: underline; }
+
+@media screen and (max-width:1279px) {
+ body {
+  font-size:15px;
+  line-height:20px
+ }
+ h1 {
+  font-size:40px;
+  line-height:46px
+ }
+ .frontpage h1 {
+  font-size:40px;
+  line-height:46px
+ }
+ h2,span.h2,span.H2,.subpageContentArea h1,.searchResults h1,.service-header {
+  font-size:36px;
+  line-height:42px
+ }
+ h3,span.h3,span.H3,legend {
+  font-size:24px;
+  line-height:28px
+ }
+ h4,span.h4,span.H4,.ingress,.subpageContentArea .ingress,.topContentArea {
+  font-size:20px;
+  line-height:24px
+ }
+ h5,span.h5,span.H5 {
+  font-size:18px;
+  line-height:24px
+ }
+}
+@media screen and (max-width:959px) {
+ h1 {
+  font-size:36px;
+  line-height:42px
+ }
+ .frontpage h1 {
+  font-size:48px;
+  line-height:54px
+ }
+ h2,span.h2,span.H2,.subpageContentArea h1,.searchResults h1,.service-header {
+  font-size:30px;
+  line-height:36px
+ }
+ h3,span.h3,span.H3,legend {
+  font-size:24px;
+  line-height:28px
+ }
+ h4,span.h4,span.H4,.ingress,.subpageContentArea .ingress,.topContentArea {
+  font-size:18px;
+  line-height:22px
+ }
+ h5,span.h5,span.H5 {
+  font-size:16px;
+  line-height:20px
+ }
+}
+@media screen and (max-width:739px) {
+ h1,.frontpage h1 {
+  font-size:34px;
+  line-height:40px
+ }
+ h2,span.h2,span.H2,.subpageContentArea h1,.searchResults h1 {
+  font-size:26px;
+  line-height:32px
+ }
+ h3,span.h3,span.H3,legend {
+  font-size:21px;
+  line-height:25px
+ }
+}
+@media screen and (max-width:549px) {
+ h1,.frontpage h1 {
+  font-size:26px;
+  line-height:32px
+ }
+ h2,span.h2,span.H2,.subpageContentArea h1,.searchResults h1,.service-header {
+  font-size:22px;
+  line-height:26px
+ }
+ h3,span.h3,span.H3,legend,.EPiServerForms h2.Form__Title {
+  font-size:20px;
+  line-height:24px
+ }
+}
+
+/* Class described in https://benjeffrey.com/posts/pandoc-syntax-highlighting-css
+   Colours from https://gist.github.com/robsimmons/1172277 */
+
+code > span.kw { color: #555; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal (decimal values) */
+code > span.bn { color: #d14; } /* BaseN */
+code > span.fl { color: #d14; } /* Float */
+code > span.ch { color: #d14; } /* Char */
+code > span.st { color: #d14; } /* String */
+code > span.co { color: #888888; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* OtherToken */
+code > span.al { color: #ff0000; font-weight: bold; } /* AlertToken */
+code > span.fu { color: #900; font-weight: bold; } /* Function calls */ 
+code > span.er { color: #a61717; background-color: #e3d2d2; } /* ErrorTok */

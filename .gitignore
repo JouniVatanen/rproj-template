@@ -23,7 +23,8 @@ work/*
 output/*
 
 # Except template file and gitignores
-!doc/template.docx
+!doc/template.*
+!doc/Ilmarinen.css
 !posted/.gitignore
 !work/.gitignore
 !output/.gitignore
