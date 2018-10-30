@@ -8,7 +8,29 @@ Custom template for an R project
 3. Download template from github using
 - [https-connection, recommended](https://help.github.com/articles/which-remote-url-should-i-use/#cloning-with-https-urls-recommended)
 - [SSH-connection](https://help.github.com/articles/connecting-to-github-with-ssh/)
-4. 
+
+### Git commands
+
+Add a remote repository and fetch
+
+```
+git remote add origin git@github.com:JouniVatanen/rproj-template.git
+git fetch
+```
+
+Change the url to your own project
+
+```
+git remote set-url origin git@github.com:JouniVatanen/my-project.git
+```
+
+Commit to the new repository
+
+```
+git add -A
+git commit -m "first commit"
+git push --set-upstream origin master
+```
 
 ## Info template
 
