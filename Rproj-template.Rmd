@@ -22,12 +22,8 @@ editor_options:
 
 ```{r setup, echo = FALSE, results = "hide", warning = FALSE, error = FALSE, message = FALSE}
 # Define names, variables and paths if necessary
-csv.data.2018 <- "./data/data-2018.csv"
-xls.data.2018 <- "/.data/data-2018.xlsx"
 #my.year <- c("2018")
-
-# Select columns to load
-col.select <- c(1:10, 13)
+#col.select <- c(1:10, 13)
 
 # Load (and install) packages
 if (!require("pacman")) install.packages("pacman") #pacman loads and installs packages
@@ -36,16 +32,16 @@ checkpoint::checkpoint("2018-08-01") # use the same date when R-3.5.1. was relea
 pacman::p_load_gh("JouniVatanen/Jmisc") # usermade general custom functions
 
 # Load (and install) usual packages
-pacman::p_load("extrafont", "readxl", "tidyverse", "tidyr", "data.table", "magrittr", "lubridate", "knitr", "modelr", "broom", "caret")
+pacman::p_load("extrafont", "readxl", "tidyverse", "tidyr", "data.table", "magrittr", "lubridate", "knitr", "modelr", "broom", "caret", "desctable", "formattable", "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC", "psych")
 
 # Load (and install) other packages, if necessary
-#pacman::p_load("desctable", "Hmisc", "GGally", "kableExtra", "formattable", "gridExtra", "FactoMineR", "factoextra", "ClustOfVar", "psych", "ggrepel", "pROC", "DT", "webshot", "xts")
+#pacman::p_load("Hmisc", "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar", "ggrepel", "pROC", "DT", "webshot", "xts", "htmlwidgets")
 
 # When installing extrafont for the first time, install also Arial fonts
 #extrafont::font_import(pattern = "Arial.*")
 
 # Load functions and api settings
-source("./R/functions.R")
+source("./R/functions.R", encoding = "UTF-8")
 
 # Define global options FALSE and knitr options
 knitr::opts_chunk$set(warning = FALSE, error = FALSE, message = FALSE, echo = FALSE)
@@ -68,8 +64,8 @@ Miksi tämä työ on tehty ja joitain tarvittavia linkkejä
 
 ```{r load-data, eval = FALSE}
 # Load data csv/xlsx
-df.2018 <- fread(csv.data.2018, select=col.select, encoding="UTF-8", check.names = TRUE)
-df.2018 <- read_excel(xls.data.2018, sheet=1)
+df.2018 <- fread("./data/data.csv", select = col.select, encoding = "UTF-8", check.names = TRUE)
+df.2018 <- read_excel("./data/data.xlsx", sheet = 1)
 ```
 
 ```{r mutate-data, eval = FALSE}
@@ -82,31 +78,145 @@ koulutus.class <- rlang::exprs(
   "4 Perus-/ ammattikoulu"              = "Kansa-/perus-/keski-/ammattikoulu",
   "5 EOS"                               = "Valitse")
 
+statement.levels <- c(
+  "täysin eri mieltä", 
+  "jokseenkin eri mieltä", 
+  "ei samaa eikä eri mieltä", 
+  "jokseenkin samaa mieltä", 
+  "täysin samaa mieltä")
+
+factor.levels <- c("", "", "", "")
+
 # If you want to combine many df, then rename, select and give a version name
 df.2018 %<>%
   mutate(version = "v2018") %>%
   rename() %>%
-  select()
+  select() %>%
+  left_join(df.db.2018, by = "id")
 
-# Mutate the data using the same function
-df.2018 %<>% my_mutate()
+# Create a data that contains all the open feedback
+df.feedback <- df.2018 %>%
+  select() %>%
+  mutate_all(funs(ifelse(. %in% c(
+    "Kyllä, missä asioissa?", 
+    "En, mitä tietoa kaipasit?", 
+    "Kyllä", 
+    "En",
+    "Jollain muulla tavalla, miten?", 
+    "-", "--"), 
+    NA, .))) %>%
+  rename_all( ~ c(
+    "var 1",
+    "var 2")) %>%
+  gather(2:ncol(.), key = "question", value = "values") %>%
+  filter(!is.na(values)) %>%
+  arrange(question, values)
 
-# Combine different data sources and mutate factors to the same levels
-# If you combine factor columns, then define those columns
-fct.col <- c() 
+# Mutate the data
+df.numeric <- df.2018 %>%
 
-df.example.all <- bind_rows(df.2018, df.2017) %>%
+  # Join area codes
+  left_join(select(df.pono, 1, 7, 11, 13), 
+    by = c("POSTINUMERO_1" = "Postinumeroalue")) %>%
+  
+  # Strip information from social security number
+  mutate_at(vars(HETU), funs(
+    Sukupuoli = Jmisc::calc_gender(.),
+    Synt.pvm = Jmisc::calc_birth(.))) %>%
+  
+  # Calculate age
+  mutate(Ika = interval(birth, today) / years(1)) %>%
+  
+  # Change statements to factors and remove EOS
+  mutate_at(vars(1:3), funs(as.numeric(parse_factor(
+    ., statement.levels, na = c("", "NA", "en osaa sanoa"), include_na = FALSE)))) %>%
+  
+  # Classify variablesage, pension amount and pension type
+  mutate(var1 = cut(var, c(0, 54.9, 59.9, 62.9, 64, 999), 
+      labels = c("", "", "", "", "", "", "")),
+    var2 = case_when(
+      var %in% c("") ~ "case1",
+      var %in% c("") ~ "case2",
+      TRUE ~ .)) %>%
+  
+  # Generate 0-100 variables
+  mutate_at(vars(1), funs(ifelse(is.na(.), 0, 100))) %>%
+  mutate_at(vars(2), funs(ifelse(is.na(.), NA, ifelse(. == "Kyllä", 100, 0)))) %>%
+  mutate_at(vars(3), funs(ifelse(is.na(.), NA, ifelse(. == "En", 0, 100)))) %>%
+
+  # Calculate NPS
+  mutate_at(vars(4), funs(NPS = Jmisc::calc_nps(.))) %>%
+  
+  # Modify to factors with levels and custom NA values
+  mutate_at(vars(5), funs(
+    parse_factor(., factor.levels, na = c("", "NA", "EOS")))) %>%
+  
+  # To factors
+  mutate_at(vars(6), funs(as.factor(.))) %>%
+  
+  # Leave only necessary variables
+  select(NPS, 1:10) %>%
+  
+  # Rename for descriptive table
+  rename(
+    `kysymys` = `1: kysymys`)
+
+# Combine all data
+df.all <- bind_rows(df.2018, df.2017) %>%
   mutate_at(vars(one_of(fct.col)), funs(as.factor))
+```
+
+```{r create-table, eval = FALSE}
+# Create statistics table
+# Choose data and columns to factor and group by
+df.desc <- Jmisc::desc_stat(df.2018, c(1:10), c("var1", "var2"))
+```
+
+```{r mutate-table, eval = FALSE}
+# Mutate statistics table
+df.desc %<>%
+  
+  # Add extra rows
+  add_row(Variables = "") %>%
+  add_row(Variables = "TAUSTATIEDOT") %>%
+  
+  # Slice the data to the correct form
+  slice(c(1:5, 2, 10)) %>%
+  
+  # Fix variable names and remove unnecessary variables
+  #mutate_at(vars(Variables), funs(str_replace_all(. , "\\.", "\\s"))) %>%
+  mutate_at(vars(Variables), funs(str_replace_all(., "\\[.*\\]", ""))) %>%
+  mutate_at(vars(Variables), funs(case_when(
+    . == "100" ~ "suosittelija",
+    . == "0" ~ "neutraali",
+    . == "-100" ~ "kriittinen",
+    . == "1" ~ "täysin eri mieltä",
+    . == "2" ~ "jokseenkin eri mieltä",
+    . == "3" ~ "ei samaa eikä eri mieltä",
+    . == "4" ~ "jokseenkin samaa mieltä",
+    . == "5" ~ "täysin samaa mieltä",
+    TRUE ~ .))) %>%
+  
+  # Rename variables
+  rename(
+    Suosittelija = `100`, 
+    Neutraali = `0`,
+    Kriittinen = `-100`) %>%
+  
+  # Remove futile variables
+  select(-starts_with("V1"))
 ```
 
 ```{r data-to-txt, eval = FALSE}
 # Export data to txt-file
-Jmisc::df_to_txt(df.example, "output/data_example.txt")
+Jmisc::df_to_txt(df.desc, "./output/desc_table.txt")
+Jmisc::df_to_txt(df.feedback, "./output/data_feedback.txt")
+Jmisc::df_to_txt(df.2018, "output/data_df2018.txt")
 ```
 
-```{r data-to-desc, eval = FALSE}
+```{r data-to-desc-txt, eval = FALSE}
 # Create basic output to inspect the file
-Jmisc::inspect(df.example, "output/desc_example.txt")
+Jmisc::inspect(df.2018, "output/desc_example.txt")
 ```
 
 # Tiivistelmä
@@ -117,44 +227,104 @@ Yhteenveto ja johtopäätökset
 
 ## Peruskuvat
 
-```{r fig-cor-01, eval = FALSE}
-# Correlation plot
-Jmisc::corr_plot(df.2018)
+```{r create-fig-basic, eval = FALSE}
+# Basic plot
+# Choose which variables to plot
+l <- list(1, 2, c(3:5), 6, 7)
+
+# Edit labels to fit the screen properly
+labels <- c("var.name")
+
+# Choose which variables to plot and map the function to a list
+plot.basic <- df.desc %>% 
+  select(1:2) %>%
+  rename_at(1, funs(str_sub(., 1, 30))) %>%
+  {map(l, function(x) Jmisc::multiplot_bars(., x, labels))}
+
+# Length of the list for a calculation to correct figure size
+# Height of 6 for each row of pictures
+len <- as.integer(round(length(plot.basic) / 2, 0) * 3)
 ```
 
-```{r fig-basic-01, eval = FALSE}
-# Basic plot
-#Note: Still needs some work to make better looking mosaic plots
-# Load packages
-require(GGally)
-
-# Plot matrix of all variables
-pl.df <- select(df.2018, c(1:50)) %>% mutate_at(1:50, as.factor)
-names(pl.df) <- str_replace_all(names(pl.df), "ö|ä", "")
-
-# Plot pairplot from all the active variables
-pl02 <- ggpairs(pl.df, upper = list(discrete = "blank"), lower = list(discrete = ggally_ratio), axisLabels = "none") +
-  theme_minimal()
-
-pl02
-
+```{r show-fig-basic, out.width = "100%", fig.height = len}
+# Create and show a grid from plots
+do.call("grid.arrange", c(plot.basic, ncol = 2))
 ```
 
 ## Tulostaulukko
 
-```{r table-01, eval = FALSE}
-# Create table
-desc.2018 %>%
+```{r show-table, eval = FALSE}
+# Show table
+df.desc %>%
   mutate_at(vars(-1), funs(round(., 1))) %>%
   mutate_at(vars(-1), funs(ifelse(is.na(.), "", .))) %>%
-  formattable(list(area(2:nrow(.), 2:ncol(.)) ~ color_tile("white","orange"))) %>% 
-  as.datatable(rownames = FALSE, extensions = c("Buttons", "FixedColumns"), 
+  datatable(rownames = FALSE, extensions = c("Buttons", "FixedColumns"), 
     options = list(
-      pageLength = 5, scrollX = TRUE, dom = "Blrtip", buttons = list(
-        "copy", "print", list(
-          extend = "excel", filename = "Ilmarinen_futurescore"), 
+      pageLength = 10, scrollX = TRUE, lengthMenu = list(c(10, -1), list("10", "All")), 
+      dom = "Blrtip", buttons = list(
+        "copy",  
         list(
-          extend = "colvis", text = "Näytä/piilota sarakkeita", columns = ":gt(1)"), 
+          extend = "excel", filename = "Elakepalvelu"), 
+        list(
+          extend = "colvis", text = "Näytä/piilota sarakkeita", columns = ":gt(1)", show = ":lt(2)", hide = ":gt(1)"), 
         list(
           extend = "colvisGroup", text = "Piilota kaikki", show = ":lt(2)", hide = ":gt(1)"))))
+```
+
+### Sanapilvi
+
+```{r wordcloud, out.width = "100%"}
+# Create remove words list
+remove.words <- c("että", "moite", "sitä", "sitä", "sen", "palaute", "fffd", "hei", "myös")
+
+# Stem and remove stopwords for further analyses
+corpus <- Corpus(VectorSource(df.feedback["values"]))
+dtm <- TermDocumentMatrix(corpus, control = list(
+  removePunctuation = TRUE,
+  removeNumbers = TRUE,
+  tolower = TRUE,
+  stopwords = c(stopwords("finnish"), remove.words),
+  stripWhitespace = TRUE))
+
+vec <- sort(rowSums(as.matrix(dtm)), decreasing = TRUE)
+df <- data.frame(word = names(vec), freq = vec)
+
+# Create wordcloud and give a random number seed
+par(mar = rep(0, 4))
+set.seed(31102018)
+wordcloud(df$word, df$freq, min.freq = 1, max.words = 200, rot.per = 0, colors = ilmarinen_cols())
+```
+
+### Yksittäiset palautteet
+
+```{r include = FALSE}
+# This is needed for the feedback work
+DT::datatable(df.feedback, extensions = "Buttons",
+  options = list(
+    pageLength = 5, scrollX = TRUE, dom = "Blrtip",
+    buttons = list("copy", list(
+      extend = "excel", filename = "Avopalaute"))))
+```
+
+```{r results = "asis"}
+# All feedback in its own boxes
+for (i in unique(df.feedback$question)) {
+  
+  DT.i <- df.feedback %>%
+    dplyr::filter(question == i) %>%
+    dplyr::select(values)
+  
+  cat("\n\n")
+  print(htmltools::tagList(
+    DT::datatable(DT.i, 
+      rownames = FALSE, 
+      colnames = c(i), 
+      extensions = "Buttons",
+      options = list(
+        pageLength = 5, scrollX = TRUE, dom = "Blrtip",
+        lengthMenu = list(c(5, -1), list('5', 'All')),
+        buttons = list("copy", list(
+          extend = "excel", filename = "Avopalaute"))))))
+  cat("\n\n")
+}
 ```
