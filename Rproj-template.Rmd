@@ -81,15 +81,17 @@ df.2018 <- fread("./data/data.csv",
                  check.names = TRUE)
 
 # Load single xls/xlsx sheet
-df.2018 <- read_excel("./data/data.xlsx", sheet = 1)
+df.2018 <- read_excel("./data/data.xlsx")
 
 # Load multiple xls/xlsx sheets
-# Choose sheet names or numbers
-sheet.names <- c("Sheet 1", "Sheet 2", "Sheet 3")
+# Choose sheet names or numbers and load using purr
+df.2018 <- c("Sheet 1", "Sheet 2", "Sheet 3")
+  map_df(~ read_excel("./data/data.xlsx", sheet = .x))
 
-# Load data using purrr and create segment variable based on excel sheet name
-df.2018 <- map_df(sheet.names, 
-  ~ read_excel("./data/data.xlsx", sheet = .x))
+# Load multiple xls/xlsx files
+# Choose patterns for file names and load using purrr
+df.2018 <- list.files("./data", "Osallistujat", full.names = TRUE) %>%
+  map_df(~ read_excel(.x))
 
 ```
 
@@ -263,7 +265,7 @@ df.desc %<>%
 # Export data to txt-file
 Jmisc::df_to_txt(df.desc, "./output/desc_table.txt")
 Jmisc::df_to_txt(df.feedback, "./output/data_feedback.txt")
-Jmisc::df_to_txt(df.2018, "output/data_cleaned_2018.txt")
+Jmisc::df_to_txt(df.2018, "./output/data_cleaned_2018.txt")
 ```
 
 ```{r data-to-desc-txt, eval = FALSE}
