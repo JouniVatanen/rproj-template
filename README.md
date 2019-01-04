@@ -11,20 +11,20 @@ Custom template for an R project
 
 ### Git commands
 
-Add a remote repository and fetch
+Add a remote repository and pull. You might need to delete .gitignore from your own R project before pulling.
 
 ```
 git remote add origin git@github.com:JouniVatanen/rproj-template.git
-git fetch
+git pull origin master
 ```
 
-Change the url to your own project
+Change the url to your own project.
 
 ```
 git remote set-url origin git@github.com:JouniVatanen/my-project.git
 ```
 
-Commit to the new repository
+Commit to the new repository.
 
 ```
 git add -A
