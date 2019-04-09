@@ -26,10 +26,11 @@ editor_options:
 if (!require("pacman")) install.packages("pacman")
 
 # Checkpoint installs packages from a given date for reproduction
-pacman::p_load("checkpoint") 
+pacman::p_load("checkpoint", update = TRUE) 
 
-# Use the same date when R-3.5.1. was released
-checkpoint::checkpoint("2018-08-01", scanForPackages = FALSE)
+# Use the same date when R-3.5.3. was released
+checkpoint("2019-03-11", scanForPackages = FALSE, 
+           checkpointLocation = Sys.getenv("USERPROFILE"))
 
 # Usermade general custom functions
 pacman::p_load_gh("JouniVatanen/Jmisc") 
@@ -46,7 +47,7 @@ pacman::p_load("extrafont", "readxl", "tidyverse", "tidyr", "data.table",
 
 # Check if Arial fonts are installed and install, if they are not
 if (!any(match(fonts(), "Arial"), na.rm = TRUE)) {
-  font_import(pattern = "Arial.*")
+  font_import(pattern = "Arial.*", prompt = FALSE)
 }
 
 # Load functions and api settings
