@@ -18,6 +18,12 @@ git remote add origin git@github.com:JouniVatanen/rproj-template.git
 git pull origin master
 ```
 
+If you need to overwrite all existing files like .gitignore then instead of pull
+```
+git fetch --all
+git reset --hard origin/master
+```
+
 Change the url to your own project.
 
 ```
