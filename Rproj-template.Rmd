@@ -29,8 +29,7 @@ if (!require("pacman")) install.packages("pacman")
 pacman::p_load("checkpoint", update = TRUE) 
 
 # Use the same date when R-3.5.3. was released
-checkpoint("2019-03-11", scanForPackages = FALSE, 
-           checkpointLocation = Sys.getenv("USERPROFILE"))
+checkpoint("2019-03-11", checkpointLocation = Sys.getenv("USERPROFILE"))
 
 # Usermade general custom functions
 pacman::p_load_gh("JouniVatanen/Jmisc") 
