@@ -41,14 +41,14 @@ pacman::p_load(
   "extrafont", "readxl", "tidyverse", "tidyr", "data.table", "magrittr", 
   "lubridate", "knitr", "modelr", "broom", "caret", "desctable", "formattable", 
   "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC", "stringi", 
-  "keyring",
+  "keyring", "DBI", "odbc", "dbplyr"
   #"Hmisc", "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar", 
   #"ggrepel", "pROC", "webshot", "xts", "psych", "htmlwidgets"
   )
 
 # Note:  there is some trouble installing RDCOMClient. 
 # 1. Install Rtools 
-# 2. Adding variables to your path 
+# 2. Add variables to your path 
 # 3. Install from github
 #devtools::install_github("omegahat/RDCOMClient")
 
@@ -59,6 +59,16 @@ if (!any(match(fonts(), "Arial"), na.rm = TRUE)) {
 
 # Load functions
 source("./R/functions.R", encoding = "UTF-8")
+
+# Set variables to be used in keyring.
+#kr_service <- "my_service"
+#kr_username <- "my_username"
+
+# If keyring service is not yet defined, then define password
+#if (is.na(key_list(kr_service)[1, 2])) {
+#  warning("Check the kr_username and save your password to keyring")
+#  keyring::key_set(service = kr_service, username = kr_username)
+#}
 
 # Define global options FALSE and knitr options
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
@@ -71,7 +81,7 @@ options(knitr.kable.NA = "")
 # Activate to create a html file
 rmarkdown::render("Rproj-template.Rmd", 
   output_format = "html_document", 
-  output_file = "./output/Rproj-template.html", 
+  output_dir = "./output", 
   encoding = "UTF-8")
 ```
 
