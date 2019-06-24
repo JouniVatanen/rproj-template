@@ -10,12 +10,6 @@ output:
     df_print: paged
     code_folding: hide
     css: "./doc/Ilmarinen.css"
-  html_notebook: 
-    code_folding: hide
-  word_document:
-    reference_docx: "./doc/template.docx"
-  powerpoint_presentation:
-    reference_doc: "./doc/template.pptx"
 editor_options: 
   chunk_output_type: console
 ---
@@ -31,19 +25,20 @@ if (!require("pacman")) install.packages("pacman")
 pacman::p_load("checkpoint") 
 
 # Use the date few weeks after R-3.5.3. was released
-checkpoint("2019-04-01", checkpointLocation = Sys.getenv("USERPROFILE"))
+checkpoint("2019-04-01", scanForPackages = FALSE,
+           checkpointLocation = Sys.getenv("USERPROFILE"))
 
 # Usermade general custom functions
 pacman::p_load_gh("JouniVatanen/Jmisc") 
 
 # Load and install packages
 pacman::p_load(
-  "extrafont", "readxl", "tidyverse", "tidyr", "data.table", "magrittr", 
-  "lubridate", "knitr", "modelr", "broom", "caret", "desctable", "formattable", 
-  "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC", "stringi", 
-  "keyring", "DBI", "odbc", "dbplyr"
-  #"Hmisc", "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar", 
-  #"ggrepel", "pROC", "webshot", "xts", "psych", "htmlwidgets"
+  "extrafont", "readxl", "tidyverse", "tidyr", "data.table", "magrittr" 
+  , "lubridate", "knitr", "modelr", "broom", "caret", "desctable", "formattable" 
+  #, "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC", "stringi"
+  #, "keyring", "DBI", "odbc", "dbplyr"
+  #, "Hmisc", "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar", 
+  #, "ggrepel", "pROC", "webshot", "xts", "psych", "htmlwidgets"
   )
 
 # Note:  there is some trouble installing RDCOMClient. 
@@ -71,10 +66,11 @@ source("./R/functions.R", encoding = "UTF-8")
 #}
 
 # Define global options FALSE and knitr options
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+knitr::opts_chunk$set(warning = F, error = F, message = F, echo = F)
 
 # Change knit table option NA to empty
-options(knitr.kable.NA = "")
+options(knitr.kable.NA = "", OutDec = ",")
+locale.fi <- locale(date_names = "fi", decimal_mark = ",", grouping_mark = " ")
 ```
 
 ```{r knit-document, eval = FALSE}
