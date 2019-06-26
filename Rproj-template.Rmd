@@ -14,7 +14,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, echo = FALSE, results = "hide", warning = FALSE, message = FALSE}
+```{r setup, echo = FALSE, warning = FALSE, message = FALSE}
 # SETUP
 
 # PACKAGES AND FUNCTIONS
@@ -69,7 +69,7 @@ source("./R/functions.R", encoding = "UTF-8")
 knitr::opts_chunk$set(warning = F, error = F, message = F, echo = F)
 
 # Change knit table option NA to empty
-options(knitr.kable.NA = "", OutDec = ",")
+options(knitr.kable.NA = "")
 locale.fi <- locale(date_names = "fi", decimal_mark = ",", grouping_mark = " ")
 ```
 
