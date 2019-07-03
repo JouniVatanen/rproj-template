@@ -14,27 +14,34 @@ editor_options:
   chunk_output_type: console
 ---
 
+```{r create-html-document, eval = FALSE}
+# Activate to create a html file
+rmarkdown::render("Rproj-template.Rmd", "html_document", 
+                  output_dir = "./output")
+```
+
 ```{r setup, echo = FALSE, warning = FALSE, message = FALSE}
 # SETUP
 
 # PACKAGES AND FUNCTIONS
 # Pacman loads and installs packages
-if (!require("pacman")) install.packages("pacman")
+if (!require("pacman")) install.packages("pacman"); library(pacman)
 
 # Checkpoint installs packages from a given date for reproduction
-pacman::p_load("checkpoint") 
+p_load("checkpoint") 
 
 # Use the date few weeks after R-3.5.3. was released
-checkpoint("2019-04-01", scanForPackages = FALSE,
+checkpoint("2019-04-01", scanForPackages = FALSE, R.version = "3.5.3",
            checkpointLocation = Sys.getenv("USERPROFILE"))
 
-# Usermade general custom functions
-pacman::p_load_gh("JouniVatanen/Jmisc") 
+# Usermade general custom functions from github
+p_load_gh("JouniVatanen/Jmisc") 
 
 # Load and install packages
-pacman::p_load(
-  "extrafont", "readxl", "tidyverse", "tidyr", "data.table", "magrittr" 
+p_load(
+  "extrafont", "readxl", "tidyverse", "tidyr", "data.table", "magrittr", "fs"
   , "lubridate", "knitr", "modelr", "broom", "caret", "desctable", "formattable" 
+  , "rmarkdown", "vroom"
   #, "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC", "stringi"
   #, "keyring", "DBI", "odbc", "dbplyr"
   #, "Hmisc", "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar", 
@@ -47,38 +54,40 @@ pacman::p_load(
 # 3. Install from github
 #devtools::install_github("omegahat/RDCOMClient")
 
+# Note: rJava needs java path defined
+#java.path <- path(Sys.getenv("USERPROFILE"), "Documents/Programs/Java/jre")
+#if (dir_exists(java.path)) { 
+#  options(java.home = java.path)
+#  p_load("rJava")
+#} else {
+#  stop("Define correct path for Java in java.path")
+#}
+
 # Check if Arial fonts are installed and install, if they are not
 if (!any(match(fonts(), "Arial"), na.rm = TRUE)) {
   font_import(pattern = "arial.*", prompt = FALSE)
 }
 
-# Load functions
-source("./R/functions.R", encoding = "UTF-8")
+# Set knitr options like NA values for tables and locale
+opts_chunk$set(warning = F, error = F, message = F, echo = F)
+options(knitr.kable.NA = "", encoding = "UTF-8")
+
+# Change options eg. match Finnish locale
+locale.fi <- locale(date_names = "fi", decimal_mark = ",", grouping_mark = " ")
 
 # Set variables to be used in keyring.
-#kr_service <- "my_service"
-#kr_username <- "my_username"
+#kr.service <- "my.service"
+#kr.username <- "my.username"
 
 # If keyring service is not yet defined, then define password
-#if (is.na(key_list(kr_service)[1, 2])) {
+#if (is.na(key_list(kr.service)[1, 2])) {
 #  warning("Check the kr_username and save your password to keyring")
-#  keyring::key_set(service = kr_service, username = kr_username)
+#  keyring::key_set(service = kr.service, username = kr.username)
 #}
 
-# Define global options FALSE and knitr options
-knitr::opts_chunk$set(warning = F, error = F, message = F, echo = F)
+# Load functions
+source("./R/functions.R")
 
-# Change knit table option NA to empty
-options(knitr.kable.NA = "")
-locale.fi <- locale(date_names = "fi", decimal_mark = ",", grouping_mark = " ")
-```
-
-```{r knit-document, eval = FALSE}
-# Activate to create a html file
-rmarkdown::render("Rproj-template.Rmd", 
-  output_format = "html_document", 
-  output_dir = "./output", 
-  encoding = "UTF-8")
 ```
 
 # Johdanto
