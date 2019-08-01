@@ -61,6 +61,10 @@ if ("package:rJava" %in% search()) {
 
 
 # GENERAL OPTIONS AND VARIABLES
+# Load data from Jmisc package
+#data("fi_postnumber_2016", package = "Jmisc")
+#data("fi_people_names", package = "Jmisc")
+
 # Check if Arial fonts are installed and install, if they are not
 if (!any(match(fonts(), "Arial"), na.rm = TRUE)) {
   font_import(pattern = "arial.*", prompt = FALSE)
@@ -71,16 +75,17 @@ opts_chunk$set(warning = F, error = F, message = F, echo = F)
 options(knitr.kable.NA = "", encoding = "UTF-8")
 
 # Change options eg. match Finnish locale
-locale.fi <- locale(date_names = "fi", decimal_mark = ",", grouping_mark = " ")
+locale_fi <- locale(date_names = "fi", decimal_mark = ",", grouping_mark = " ")
+na_values <- c("null", "'null'", "", ".", "\"\"", "<NA>", "NA", "en osaa sanoa")
 
 # Set variables to be used in keyring.
-#kr.service <- "my.service"
-#kr.username <- "my.username"
+#kr_service <- "my_service"
+#kr_username <- "my_username"
 
 # If keyring service is not yet defined, then define password
-#if (is.na(key_list(kr.service)[1, 2])) {
+#if (is.na(key_list(kr_service)[1, 2])) {
 #  warning("Check the kr_username and save your password to keyring")
-#  keyring::key_set(service = kr.service, username = kr.username)
+#  key_set(service = kr_service, username = kr_username)
 #}
 ```
 
@@ -91,83 +96,67 @@ Miksi tämä työ on tehty ja joitain tarvittavia linkkejä
 ```{r load-data, eval = FALSE}
 # Load data
 # Load single csv
-df.2018 <- fread("./data/data.csv", 
-                 select = col.select, 
-                 encoding = "UTF-8", 
-                 check.names = TRUE)
+df <- fread("./data/data.csv", select = col_select, encoding = "UTF-8") %>% 
 
+  
 # Load single xls/xlsx sheet
-df.2018 <- read_excel("./data/data.xlsx")
+df <- read_excel("./data/data.xlsx", .name_repair = clean_names)
 
 # Load multiple xls/xlsx sheets
 # Choose sheet names or numbers and load using purr
-df.2018 <- c("Sheet 1", "Sheet 2", "Sheet 3")
-  map_df(~ read_excel("./data/data.xlsx", sheet = .x))
+df <- c("Sheet 1", "Sheet 2", "Sheet 3")
+  map_df(~read_excel("./data/data.xlsx", sheet = .x, .name_repair = clean_names))
 
 # Load multiple xls/xlsx files
 # Choose patterns for file names and load using purrr
-df.2018 <- list.files("./data", "Osallistujat", full.names = TRUE) %>%
-  map_df(~ read_excel(.x))
+df <- dir_ls("./data", glob = "Osallistujat.*") %>%
+  map_df(~read_excel(.x, .name_repair = clean_names))
 
 ```
 
 ```{r mutate-data, eval = FALSE}
 # Mutate and combine data
 # Recode and classify
-koulutus.class <- rlang::exprs(
+education <- rlang::exprs(
   "1 Ylempi korkeakoulu"                = "Yliopisto/korkeakoulu",
   "2 AMK"                               = "Ammattikorkeakoulu",
   "3 Ylioppilas"                        = "Ylioppilas/opisto",
   "4 Perus-/ ammattikoulu"              = "Kansa-/perus-/keski-/ammattikoulu",
   "5 EOS"                               = "Valitse")
 
-statement.levels <- c(
+statement <- c(
   "täysin eri mieltä", 
   "jokseenkin eri mieltä", 
   "ei samaa eikä eri mieltä", 
   "jokseenkin samaa mieltä", 
   "täysin samaa mieltä")
 
-satisfaction.levels <- c(
+satisfaction <- c(
   "erittäin huonosti",
   "huonosti",
   "tyydyttävästi",
   "hyvin",
   "erittäin hyvin")
 
-numeric.conv <- c(
-  "^yksi$" = "1",
-  "^kaksin$" = "2",
-  "^kolme$" = "3",
-  "^neljä$" = "4",
-  "^viisi$" = "5",
-  "^kuusi$" = "6",
-  "^seitsemän$" = "7",
-  "^kahdeksan$" = "8",
-  "^yhdeksän$" = "9",
-  "^kymmenen$" = "10")
-
-factor.levels <- c("", "", "", "")
-
 # If you want to combine many df, then rename, select and give a version name
-df.2018 %<>%
+df %<>%
   mutate(version = "v2018") %>%
   rename() %>%
   select() %>%
-  left_join(df.db.2018, by = "id")
+  left_join(df_db_2018, by = "id")
 
 # Create a data that contains all the open feedback
-df.feedback <- df.2018 %>%
+df_feedback <- df %>%
   select() %>%
-  mutate_all(funs(ifelse(. %in% c(
+  mutate_all(~if_else(. %in% c(
     "Kyllä, missä asioissa?", 
     "En, mitä tietoa kaipasit?", 
     "Kyllä", 
     "En",
     "Jollain muulla tavalla, miten?", 
-    "-", "--"), 
-    NA, .))) %>%
-  rename_all( ~ c(
+    "-", "--"
+    ), NA_character_, .)) %>%
+  rename_all( ~c(
     "var 1",
     "var 2")) %>%
   gather(2:ncol(.), key = "question", value = "values") %>%
@@ -175,63 +164,62 @@ df.feedback <- df.2018 %>%
   arrange(question, values)
 
 # Mutate the data
-df.numeric <- df.2018 %>%
+df_numeric <- df %>%
 
   # Join area codes
-  left_join(select(df.pono, 1, 7, 11, 13), 
-    by = c("POSTINUMERO_1" = "Postinumeroalue")) %>%
+  left_join(
+    select(fi_postnumbers_2016, 1, 7), 
+    by = "postinumero")) %>%
   
   # Strip information from social security number
-  mutate_at(vars(HETU), 
-            funs(Sukupuoli = Jmisc::calc_gender(.),
-                 Synt.pvm = Jmisc::calc_birth(.))) %>%
+  mutate_at(
+    vars(HETU), 
+    list(gender = ~Jmisc::calc_gender(.), 
+         birth_day = ~Jmisc::calc_birth(.))) %>%
   
   # Calculate age
-  mutate(Ika = interval(birth, today) / years(1)) %>%
+  mutate(age = interval(birth_day, today) / years(1)) %>%
   
   # Change statements to factors and remove EOS
-  mutate_at(vars(1:3), 
-            funs(as.numeric(parse_factor(., statement.levels, 
-                                         na = c("", "NA", "en osaa sanoa"), 
-                                         include_na = FALSE)))) %>%
+  mutate_at(
+    vars(1:3), 
+    ~as.numeric(parse_factor(., statement.levels, 
+                             na = na_levels, include_na = FALSE))) %>%
   
   # Classify variablesage, pension amount and pension type
-  mutate(var1 = cut(var, c(0, 54.9, 59.9, 62.9, 64, 999), 
+  mutate(
+    var1 = cut(
+      var, 
+      c(0, 54.9, 59.9, 62.9, 64, 999), 
       labels = c("", "", "", "", "", "", "")),
     var2 = case_when(
       var %in% c("") ~ "case1",
       var %in% c("") ~ "case2",
       TRUE ~ .)) %>%
-  
+
   # Generate 0-100 variables
-  mutate_at(vars(1), funs(ifelse(is.na(.), 0, 100))) %>%
-  mutate_at(vars(2), funs(case_when(
+  mutate_at(vars(1), ~ifelse(is.na(.), 0, 100)) %>%
+  mutate_at(vars(2), ~case_when(
     is.na(.)     ~ NA_real_,
     . == "Kyllä" ~ 100,
-    TRUE         ~ 0))) %>%
-  mutate_at(vars(3), funs(case_when(
+    TRUE         ~ 0)) %>%
+  mutate_at(vars(3), ~case_when(
     is.na(.)    ~ NA_real_,
     . == "En"   ~ 0,
-    TRUE        ~ 100))) %>%
+    TRUE        ~ 100)) %>%
                             
   # Calculate NPS
-  mutate_at(vars(4), funs(NPS = Jmisc::calc_nps(.))) %>%
+  mutate_at(vars(4), list(NPS = ~Jmisc::calc_nps(.))) %>%
   
   # Modify to factors with levels and custom NA values
-  mutate_at(vars(5), funs(
-    parse_factor(., factor.levels, na = c("", "NA", "EOS")))) %>%
+  mutate_at(vars(5), ~parse_factor(., factor.levels, na = na_values)) %>%
   
   # To factors
-  mutate_at(vars(6), funs(as.factor(.))) %>%
+  mutate_at(vars(6), ~as.factor(.)) %>%
   
   # Leave only necessary variables
-  select(NPS, 1:10) %>%
+  select(NPS, 1:10)
   
-  # Rename for descriptive table
-  rename_all( ~ stri_replace_all_regex(., c("^(.{1,7}):", "[;?!=,]", " "), 
-                                       c("Q$1", "", "."), 
-                                       vectorize_all = FALSE))
-
 ```
 
 ```{r create-table, eval = FALSE}
@@ -242,7 +230,7 @@ df.desc <- Jmisc::desc_stat(df.numeric, c(1:10), c("var1", "var2"))
 
 ```{r mutate-table, eval = FALSE}
 # Mutate statistics table
-df.desc %<>%
+df_desc %<>%
   
   # Add extra rows
   add_row(Variables = "") %>%
@@ -252,26 +240,27 @@ df.desc %<>%
   slice(c(1:5, 2, 10)) %>%
   
   # Fix variable names and remove unnecessary variables
-  #mutate_at(vars(Variables), funs(str_replace_all(. , "\\.", "\\s"))) %>%
-  mutate_at(vars(Variables), 
-            funs(stri_replace_all_regex(., c("^Q[0-9 ]{1,7}"), c(""), 
-                                        vectorize_all = FALSE))) %>%
-  mutate_at(vars(Variables), funs(case_when(
-    . == "100" ~ "suosittelija",
-    . == "0" ~ "neutraali",
-    . == "-100" ~ "kriittinen",
-    . == "1" ~ "täysin eri mieltä",
-    . == "2" ~ "jokseenkin eri mieltä",
-    . == "3" ~ "ei samaa eikä eri mieltä",
-    . == "4" ~ "jokseenkin samaa mieltä",
-    . == "5" ~ "täysin samaa mieltä",
-    TRUE ~ .))) %>%
+  mutate_at(
+    vars(Variables), 
+    ~stri_replace_all_regex(., c("^Q[0-9 ]{1,7}"), c(""), vectorize_all = F))) %>%
+  mutate_at(
+    vars(Variables), 
+    ~case_when(
+      . == "100" ~ "suosittelija",
+      . == "0" ~ "neutraali",
+      . == "-100" ~ "kriittinen",
+      . == "1" ~ "täysin eri mieltä",
+      . == "2" ~ "jokseenkin eri mieltä",
+      . == "3" ~ "ei samaa eikä eri mieltä",
+      . == "4" ~ "jokseenkin samaa mieltä",
+      . == "5" ~ "täysin samaa mieltä",
+      TRUE ~ .))) %>%
   
   # Rename variables
   rename(
-    Suosittelija = `100`, 
-    Neutraali = `0`,
-    Kriittinen = `-100`) %>%
+    suosittelija = `100`, 
+    neutraali = `0`,
+    kriittinen = `-100`) %>%
   
   # Remove futile variables
   select(-starts_with("V1"))
@@ -279,14 +268,9 @@ df.desc %<>%
 
 ```{r data-to-txt, eval = FALSE}
 # Export data to txt-file
-Jmisc::df_to_txt(df.desc, "./output/desc_table.txt")
-Jmisc::df_to_txt(df.feedback, "./output/data_feedback.txt")
-Jmisc::df_to_txt(df.2018, "./output/data_cleaned_2018.txt")
-```
-
-```{r data-to-desc-txt, eval = FALSE}
-# Create basic output to inspect the file
-Jmisc::inspect(df.2018, "output/desc_example.txt")
+Jmisc::df_to_txt(df_desc, "./output/desc_table.txt")
+Jmisc::df_to_txt(df_feedback, "./output/data_feedback.txt")
+Jmisc::df_to_txt(df, "./output/data_cleaned_2018.txt")
 ```
 
 # Tiivistelmä
@@ -325,9 +309,9 @@ do.call("grid.arrange", c(plot.basic, ncol = 2))
 
 ```{r show-table, eval = FALSE}
 # Show table
-df.desc %>%
-  mutate_at(vars(-1), funs(round(., 1))) %>%
-  mutate_at(vars(-1), funs(ifelse(is.na(.), "", .))) %>%
+df_desc %>%
+  mutate_at(vars(-1), ~round(., 1)) %>%
+  mutate_at(vars(-1), ~if_else(is.na(.), "", .)) %>%
   datatable(rownames = FALSE, extensions = c("Buttons", "FixedColumns"), 
     options = list(
       pageLength = 10, 
@@ -355,7 +339,7 @@ df.desc %>%
 
 ```{r wordcloud, out.width = "100%"}
 # Create remove words list
-remove.words <- c("että", "moite", "sitä", "sitä", "sen", "palaute", "fffd", 
+remove_words <- c("että", "moite", "sitä", "sitä", "sen", "palaute", "fffd", 
                   "hei", "myös")
 
 # Stem and remove stopwords for further analyses
@@ -364,11 +348,11 @@ dtm <- TermDocumentMatrix(corpus, control = list(
   removePunctuation = TRUE,
   removeNumbers = TRUE,
   tolower = TRUE,
-  stopwords = c(stopwords("finnish"), remove.words),
+  stopwords = c(stopwords("finnish"), remove_words),
   stripWhitespace = TRUE))
 
 vec <- sort(rowSums(as.matrix(dtm)), decreasing = TRUE)
-df <- data.frame(word = names(vec), freq = vec)
+df <- df(word = names(vec), freq = vec)
 
 # Create wordcloud and give a random number seed
 par(mar = rep(0, 4))
@@ -390,15 +374,15 @@ DT::datatable(df.feedback, extensions = "Buttons",
 
 ```{r results = "asis"}
 # All feedback in its own boxes
-for (i in unique(df.feedback$question)) {
+for (i in unique(df_feedback$question)) {
   
-  DT.i <- df.feedback %>%
+  DT_i <- df_feedback %>%
     dplyr::filter(question == i) %>%
     dplyr::select(values)
   
   cat("\n\n")
   print(htmltools::tagList(
-    DT::datatable(DT.i, 
+    DT::datatable(DT_i, 
       rownames = FALSE, 
       colnames = c(i), 
       extensions = "Buttons",
