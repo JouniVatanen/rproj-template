@@ -26,12 +26,13 @@ rmarkdown::render("Rproj-template.Rmd", "html_document",
 packages <- c(
    "extrafont", "readxl", "tidyverse", "data.table", "fs", "vroom", "lubridate"
    , "knitr", "desctable", "formattable", "rmarkdown", "devtools", "pkgbuild"
+  #, "mailR", "quantmod"
   #, "modelr", "broom", "caret"
   #, "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC", "stringi"
   #, "keyring", "DBI", "odbc", "dbplyr", "httr", "XML", "jsonlite", "rvest"
   #, "Hmisc", "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar"
   #, "ggrepel", "pROC", "webshot", "xts", "zoo", "psych", "htmlwidgets", "rJava"
-  #, "magrittr", "seasonal"
+  #, "magrittr", "seasonal", "quan
   )
 cat(sprintf("library(%s)", packages), file = "./R/packages.R", sep = "\n")
 
@@ -44,15 +45,15 @@ checkpoint("2019-07-28", R.version = "3.6.1",
 # Load usual packages, custom functions for the project and general functions
 source("./R/packages.R")
 source("./R/functions.R")
-install_github("JouniVatanen/Jmisc")
-#devtools::install_github("omegahat/RDCOMClient")
+install_github("JouniVatanen/stools"); library(stools)
+install_github("JouniVatanen/itools"); library(itools)
 
 # Executes only if rJava is loaded for it to work properly
-if ("package:rJava" %in% search()) {
+if ("rJava" %in% .packages()) {
   # Choose your Java path
-  java.path <- path(Sys.getenv("USERPROFILE"), "Tools/Java/jre")
+  java_path <- path(Sys.getenv("USERPROFILE"), "Tools/Java/jre")
   # Set Java path if it exists
-  if (dir_exists(java.path)) options(java.home = java.path)
+  if (dir_exists(java_path)) options(java.home = java_path)
   else stop("Define correct path for Java in java.path")
 }
 
@@ -78,15 +79,18 @@ options(knitr.kable.NA = "", encoding = "UTF-8")
 locale_fi <- locale(date_names = "fi", decimal_mark = ",", grouping_mark = " ")
 na_values <- c("null", "'null'", "", ".", "\"\"", "<NA>", "NA", "en osaa sanoa")
 
-# Set variables to be used in keyring.
-#kr_service <- "my_service"
-#kr_username <- "my_username"
+# Use keyring, if it is loaded
+if ("keyring" %in% .packages()) {
+  # Set variables to be used in keyring.
+  kr_service <- "my_service"
+  kr_username <- "my_username"
 
-# If keyring service is not yet defined, then define password
-#if (is.na(key_list(kr_service)[1, 2])) {
-#  warning("Check the kr_username and save your password to keyring")
-#  key_set(service = kr_service, username = kr_username)
-#}
+  # If keyring service is not yet defined, then define password
+  if (is.na(key_list(kr_service)[1, 2])) {
+    warning("Check the kr_username and save your password to keyring")
+    key_set(service = kr_service, username = kr_username)
+  }
+}
 ```
 
 # Johdanto
