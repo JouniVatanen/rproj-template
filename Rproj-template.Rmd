@@ -24,11 +24,11 @@ rmarkdown::render("Rproj-template.Rmd", "html_document",
 # LOAD PACKAGES AND FUNCTIONS
 # Create required packages file for the checkpoint
 packages <- c(
-   "extrafont", "readxl", "tidyverse", "data.table", "fs", "vroom", "lubridate"
-   , "knitr", "desctable", "formattable", "rmarkdown", "devtools", "pkgbuild"
+   "extrafont", "readxl", "tidyverse", "fs", "vroom", "lubridate", "knitr"
+   ,"devtools", "pkgbuild", "stringi"
   #, "mailR", "quantmod"
   #, "modelr", "broom", "caret"
-  #, "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC", "stringi"
+  #, "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC",
   #, "keyring", "DBI", "odbc", "dbplyr", "httr", "XML", "jsonlite", "rvest"
   #, "Hmisc", "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar"
   #, "ggrepel", "pROC", "webshot", "xts", "zoo", "psych", "htmlwidgets", "rJava"
@@ -58,13 +58,13 @@ if ("rJava" %in% .packages()) {
 }
 
 # PROJECT VARIABLES
-
-
+d_data <- path("./data") 
+d_out <- path("./output")
 
 # GENERAL OPTIONS AND VARIABLES
 # Load data from Jmisc package
-#data("fi_postnumber_2016", package = "Jmisc")
-#data("fi_people_names", package = "Jmisc")
+#data("fi_postnumber_2016", package = "stools")
+#data("fi_people_names", package = "stools")
 
 # Check if Arial fonts are installed and install, if they are not
 if (!any(match(fonts(), "Arial"), na.rm = TRUE)) {
@@ -120,28 +120,6 @@ df <- dir_ls("./data", glob = "Osallistujat.*") %>%
 
 ```{r mutate-data, eval = FALSE}
 # Mutate and combine data
-# Recode and classify
-education <- rlang::exprs(
-  "1 Ylempi korkeakoulu"                = "Yliopisto/korkeakoulu",
-  "2 AMK"                               = "Ammattikorkeakoulu",
-  "3 Ylioppilas"                        = "Ylioppilas/opisto",
-  "4 Perus-/ ammattikoulu"              = "Kansa-/perus-/keski-/ammattikoulu",
-  "5 EOS"                               = "Valitse")
-
-statement <- c(
-  "täysin eri mieltä", 
-  "jokseenkin eri mieltä", 
-  "ei samaa eikä eri mieltä", 
-  "jokseenkin samaa mieltä", 
-  "täysin samaa mieltä")
-
-satisfaction <- c(
-  "erittäin huonosti",
-  "huonosti",
-  "tyydyttävästi",
-  "hyvin",
-  "erittäin hyvin")
-
 # If you want to combine many df, then rename, select and give a version name
 df %<>%
   mutate(version = "v2018") %>%
@@ -341,28 +319,10 @@ df_desc %>%
 
 ### Sanapilvi
 
-```{r wordcloud, out.width = "100%"}
-# Create remove words list
-remove_words <- c("että", "moite", "sitä", "sitä", "sen", "palaute", "fffd", 
-                  "hei", "myös")
-
-# Stem and remove stopwords for further analyses
-corpus <- Corpus(VectorSource(df.feedback["values"]))
-dtm <- TermDocumentMatrix(corpus, control = list(
-  removePunctuation = TRUE,
-  removeNumbers = TRUE,
-  tolower = TRUE,
-  stopwords = c(stopwords("finnish"), remove_words),
-  stripWhitespace = TRUE))
-
-vec <- sort(rowSums(as.matrix(dtm)), decreasing = TRUE)
-df <- df(word = names(vec), freq = vec)
-
+```{r wordcloud, out.width = "100%", eval = FALSE}
 # Create wordcloud and give a random number seed
-par(mar = rep(0, 4))
-set.seed(31102018)
-wordcloud(df$word, df$freq, min.freq = 1, max.words = 200, rot.per = 0, 
-          colors = ilmarinen_cols())
+set.seed(09082019)
+stools::plot_wordcloud(df_feedback$feedback, path(d_out, "wordcloud.png"))
 ```
 
 ### Yksittäiset palautteet
