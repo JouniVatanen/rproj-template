@@ -18,13 +18,13 @@ editor_options:
 # LOAD PACKAGES AND FUNCTIONS
 # Create required packages file for the checkpoint
 packages <- c(
-  "extrafont", "readxl", "tidyverse", "fs", "vroom", "lubridate", "knitr"
-  ,"stringi"
-  #, "mailR", "quantmod", "magrittr", "seasonal", "xts", "zoo"
+  "extrafont", "readxl", "tidyverse", "fs", "vroom", "lubridate", "stringi" 
+  , "janitor"
+  #, "quantmod", "magrittr", "seasonal", "xts", "zoo"
   #, "modelr", "broom", "caret"
   #, "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC",
-  #, "keyring", "DBI", "odbc", "dbplyr", "httr", "XML", "jsonlite", "rvest"
-  #, "Hmisc", "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar"
+  #, "keyring", "DBI", "httr", "XML", "jsonlite", "rvest"
+  #, "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar"
   #, "ggrepel", "pROC", "webshot", "psych", "htmlwidgets", "rJava"
   )
 cat(sprintf("library(%s)", packages), file = "./R/packages.R", sep = "\n")
@@ -68,7 +68,7 @@ if (!any(match(fonts(), "Arial"), na.rm = TRUE)) {
 }
 
 # Set knitr options like NA values for tables and locale
-opts_chunk$set(warning = F, error = F, message = F, echo = F)
+knitr::opts_chunk$set(warning = F, error = F, message = F, echo = F)
 options(knitr.kable.NA = "", encoding = "UTF-8")
 
 # Change options eg. match Finnish locale
@@ -101,7 +101,7 @@ rmarkdown::render("Rproj-template.Rmd", "html_document", output_dir = d_out)
 
 Miksi tämä työ on tehty ja joitain tarvittavia linkkejä
 
-```{r load-data, eval = FALSE}
+```{r load-data-from-file, eval = FALSE}
 # Load data
 # Load single csv
 df <- fread(path(d_data, "data.csv"), select = col_select, encoding = "UTF-8") %>%
@@ -125,6 +125,23 @@ df <- dir_ls(d_data, glob = "Osallistujat.*") %>%
 
 ```
 
+```{r load-data-from-db, eval = FALSE}
+# Connect to db
+# Note: use encoding = "latin1" to some databases
+con <- dbConnect(odbc::odbc(), dsn = "odbc_connection_name")
+
+# Create queries
+sql <- glue_sql(
+  "SELECT *
+  FROM database
+  ", .con = con)
+
+# Get data and disconnect
+df_db <- dbGetQuery(con, sql)
+dbDisconnect(con_eetu)
+
+```
+
 ```{r mutate-data, eval = FALSE}
 # Mutate and combine data
 # If you want to combine many df, then rename, select and give a version name
@@ -132,7 +149,7 @@ df <- df %>%
   mutate(version = "v2018") %>%
   rename() %>%
   select() %>%
-  left_join(df_db_2018, by = "id")
+  left_join(df_db, by = "id")
 
 # Create a data that contains all the open feedback
 df_feedback <- df %>%
@@ -162,7 +179,7 @@ df_numeric <- df %>%
   
   # Strip information from social security number
   mutate_at(
-    vars(HETU), 
+    vars(hetu), 
     list(gender = ~calc_gender(.x), 
          birth_day = ~calc_birth(.x))) %>%
   
@@ -198,7 +215,7 @@ df_numeric <- df %>%
     TRUE         ~ 100)) %>%
                             
   # Calculate NPS
-  mutate_at(vars(4), list(NPS = ~calc_nps(.x))) %>%
+  mutate_at(vars(4), list(nps = ~calc_nps(.x))) %>%
   
   # Modify to factors with levels and custom NA values
   mutate_at(vars(5), ~parse_factor(.x, factor.levels, na = na_values)) %>%
@@ -221,29 +238,29 @@ df_desc_raw <- desc_stat(df_numeric, c(1:10), c("var1", "var2"))
 # Mutate statistics table
 df_desc <- df_desc_raw %>%
   
+  # Clean variable names
+  clean_names %>%
+  
   # Add extra rows
-  add_row(Variables = "") %>%
-  add_row(Variables = "TAUSTATIEDOT") %>%
+  add_row(variables = "") %>%
+  add_row(variables = "TAUSTATIEDOT") %>%
   
   # Slice the data to the correct form
   slice(c(1:5, 2, 10)) %>%
   
   # Fix variable names and remove unnecessary variables
   mutate_at(
-    vars(Variables), 
-    ~stri_replace_all_regex(., c("^Q[0-9 ]{1,7}"), c(""), vectorize_all = F))) %>%
-  mutate_at(
-    vars(Variables), 
+    vars(variables), 
     ~case_when(
-      . == "100" ~ "suosittelija",
-      . == "0" ~ "neutraali",
-      . == "-100" ~ "kriittinen",
-      . == "1" ~ "täysin eri mieltä",
-      . == "2" ~ "jokseenkin eri mieltä",
-      . == "3" ~ "ei samaa eikä eri mieltä",
-      . == "4" ~ "jokseenkin samaa mieltä",
-      . == "5" ~ "täysin samaa mieltä",
-      TRUE ~ .))) %>%
+      .x == "100" ~ "suosittelija",
+      .x == "0" ~ "neutraali",
+      .x == "-100" ~ "kriittinen",
+      .x == "1" ~ "täysin eri mieltä",
+      .x == "2" ~ "jokseenkin eri mieltä",
+      .x == "3" ~ "ei samaa eikä eri mieltä",
+      .x == "4" ~ "jokseenkin samaa mieltä",
+      .x == "5" ~ "täysin samaa mieltä",
+      TRUE ~ .x))) %>%
   
   # Rename variables
   rename(
@@ -252,7 +269,7 @@ df_desc <- df_desc_raw %>%
     kriittinen = `-100`) %>%
   
   # Remove futile variables
-  select(-starts_with("V1"))
+  select(-starts_with("v1"))
 ```
 
 ```{r data-to-txt, eval = FALSE}
