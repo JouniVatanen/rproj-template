@@ -15,11 +15,18 @@ editor_options:
 ---
 
 ```{r setup, echo = FALSE, warning = FALSE, message = FALSE}
+# DEFINE PATHS
+if (!require("fs")) install.packages("fs"); library(fs)
+d_src <- path("./R")
+d_work <- path("./work")
+d_data <- path("./data")
+d_out <- path("./output")
+d_post <- path("./posted")
+
 # LOAD PACKAGES AND FUNCTIONS
 # Create required packages file for the checkpoint
 packages <- c(
-  "extrafont", "readxl", "tidyverse", "fs", "vroom", "lubridate", "stringi" 
-  , "janitor"
+  "extrafont", "readxl", "tidyverse", "vroom", "lubridate", "stringi", "janitor"
   #, "quantmod", "magrittr", "seasonal", "xts", "zoo"
   #, "modelr", "broom", "caret"
   #, "grid", "gridExtra", "DT", "tm", "wordcloud", "SnowballC",
@@ -27,7 +34,7 @@ packages <- c(
   #, "GGally", "kableExtra", "FactoMineR", "factoextra", "ClustOfVar"
   #, "ggrepel", "pROC", "webshot", "psych", "htmlwidgets", "rJava"
   )
-cat(sprintf("library(%s)", packages), file = "./R/packages.R", sep = "\n")
+cat(sprintf("library(%s)", packages), file = path(d_src, "packages.R"), sep = "\n")
 
 # Checkpoint installs packages
 if (!require("checkpoint")) install.packages("checkpoint")
@@ -36,11 +43,11 @@ checkpoint::checkpoint("2019-07-28", R.version = "3.6.1",
                        checkpointLocation = Sys.getenv("USERPROFILE"))
 
 # Load usual packages, custom functions for the project and general functions
-source("./R/packages.R")
-source("./R/functions.R")
+source(path(d_src, "packages.R"))
+source(path(d_src, "functions.R"))
 devtools::install_github("JouniVatanen/stools"); library(stools)
 # Note: Need a permission and GITHUB_PAT
-devtools::install_github("JouniVatanen/itools"); library(itools)
+#devtools::install_github("JouniVatanen/itools"); library(itools)
 # Note: Needed only, if you want to send emails from work network
 #devtools::install_github("omegahat/RDCOMClient"); library(RDCOMClient)
 
@@ -52,10 +59,6 @@ if ("rJava" %in% .packages()) {
   if (dir_exists(java_path)) options(java.home = java_path)
   else stop("Define correct path for Java in java.path")
 }
-
-# PROJECT VARIABLES
-d_data <- path("./data") 
-d_out <- path("./output")
 
 # GENERAL OPTIONS AND VARIABLES
 # Load data from stools package
