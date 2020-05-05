@@ -1,46 +1,24 @@
-# Rproj template
-Custom template for an R project
+# R project template
 
-## Instructions
-
-1. [Create R project](https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects)
-2. [Initialise git](https://git-scm.com/docs/git-init)
-3. Download template from github using
-- [https-connection, recommended](https://help.github.com/articles/which-remote-url-should-i-use/#cloning-with-https-urls-recommended)
-- [SSH-connection](https://help.github.com/articles/connecting-to-github-with-ssh/)
-
-### Git commands
-
-Add a remote repository and pull. You might need to delete .gitignore from your own R project before pulling.
+## Normal git workflow (DELETE THIS FROM YOUR PROJECT AFTER FIRST COMMIT)
 
 ```
-git remote add origin git@github.com:JouniVatanen/rproj-template.git
-git pull origin master
-```
-
-If you need to overwrite all existing files like .gitignore then instead of pull
-```
-git fetch --all
-git reset --hard origin/master
-```
-
-Change the url to your own project.
-
-```
-git remote set-url origin git@github.com:JouniVatanen/my-project.git
-```
-
-Commit to the new repository.
-
-```
-git add -A
+## Change origin to project github page
+git remote set-url origin git@github.com:JouniVatanen/MY-PROJECT.git
+## Push to project github page
+git add .
 git commit -m "first commit"
 git push --set-upstream origin master
 ```
 
-## Info template
+## Info
+This is an R project. Rmarkdown files (Rmd) has all the necessary parts to run the code. Usually you only need to run the rmarkdown::render command in the first lines. Rmd-files are named by project name, year and version number. Choose the year you want to use and it's largest version number. Checkpoint package ensures that you will use the correct package and R versions. 
 
-### Folder structure
+At the current stage you need [Rtools](https://cran.r-project.org/bin/windows/Rtools/) to source the github package [JouniVatanen/stools](https://github.com/JouniVatanen/stools). Later stools package will be added to CRAN and then you no longer need Rtools. If you want to write to sql as fast as possible, then you need bcp tool from SSDT which you can get [from Microsoft](https://docs.microsoft.com/en-us/sql/ssdt/download-sql-server-data-tools-ssdt?view=sql-server-ver15#ssdt-for-vs-2017-standalone-installer).
+
+The data and contents of the doc, posted, output, and work folders will not be in github. Currently some data are in the data folder in files. Later most of the data will be saved in the database for easy access. That is why you will need either files or access to the database.
+
+## Folder structure
 
 - data/
 - doc/
@@ -48,3 +26,4 @@ git push --set-upstream origin master
 - posted/
 - R/
 - work/
+

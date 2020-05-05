@@ -23,10 +23,8 @@ rmarkdown::render("Project-name-year-v1.Rmd", output_dir = "./output")
 # DEFINE PATHS
 if (!require("fs")) install.packages("fs"); library(fs)
 d_src <- path("./R")
-d_work <- path("./work")
 d_data <- path("./data")
 d_out <- path("./output")
-d_post <- path("./posted")
 
 # LOAD PACKAGES AND FUNCTIONS
 # Create required packages file for the checkpoint
@@ -45,13 +43,13 @@ cat(sprintf("library(%s, warn.conflicts=FALSE)", packages),
 # Checkpoint installs packages
 if (!require("checkpoint")) install.packages("checkpoint")
 # use a date few weeks after R.version was released
-checkpoint::checkpoint("2019-12-30", R.version = "3.6.2", 
+checkpoint::checkpoint("2020-04-26", R.version = "4.0.0", 
                        checkpointLocation = Sys.getenv("USERPROFILE"))
 
 # Load usual packages, custom functions for the project and general functions
 source(path(d_src, "packages.R"))
 source(path(d_src, "functions.R"))
-devtools::install_github("JouniVatanen/stools"); library(stools)
+devtools::install_github("JouniVatanen/stools", upgrade = F); library(stools)
 # Note: Need a permission and GITHUB_PAT
 #devtools::install_github("JouniVatanen/itools"); library(itools)
 # Note: Needed only, if you want to send emails from work network
@@ -68,8 +66,9 @@ if ("rJava" %in% .packages()) {
 
 # GENERAL OPTIONS AND VARIABLES
 # Load data from stools package
-#data("fi_postnumber_2016", package = "stools")
+#data("fi_postnumber_2020", package = "stools")
 #data("fi_people_names", package = "stools")
+#data("fi_industries_2008", package = "stools")
 
 # Check if Arial fonts are installed and install, if they are not
 if (!any(match(fonts(), "Arial"), na.rm = TRUE)) {
@@ -78,11 +77,10 @@ if (!any(match(fonts(), "Arial"), na.rm = TRUE)) {
 
 # Set knitr options like NA values for tables and locale
 knitr::opts_chunk$set(warning = F, message = F, echo = F)
-options(knitr.kable.NA = "")
+options(knitr.kable.NA = "", scipen = 999)
 
 # Change options eg. match Finnish locale
-fi_locale <- readr::locale(date_names = "fi", decimal_mark = ",", 
-                          grouping_mark = " ")
+fi_locale <- locale(date_names = "fi", decimal_mark = ",", grouping_mark = " ")
 na_values <- c("", "NA", "-'")
 
 # Use keyring, if it is loaded
@@ -97,11 +95,6 @@ if ("keyring" %in% .packages()) {
     key_set(service = kr_service, username = kr_username)
   }
 }
-```
-
-```{r create-html-document, eval = FALSE}
-# Activate to create a html file
-rmarkdown::render("Rproj-template.Rmd", "html_document", output_dir = d_out)
 ```
 
 # Johdanto
@@ -357,7 +350,7 @@ knitr::include_graphics(p_wordcloud)
 
 ### Yksittäiset palautteet
 
-```{r include = FALSE}
+```{r include = FALSE, eval = FALSE}
 # This is needed for the feedback work
 DT::datatable(df_feedback, extensions = "Buttons",
   options = list(
